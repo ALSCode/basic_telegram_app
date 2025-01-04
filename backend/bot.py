@@ -1,63 +1,44 @@
-import os
-import json
-from dotenv import load_dotenv
-from telegram import Update, WebAppInfo, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telebot import types
+import telebot
 
-# Загружаем переменные окружения
-load_dotenv()
+bot = telebot.TeleBot('7833394180:AAFCcw9q4-rDeUL0Obh6ukiMlcJZ_GhGg0k')
 
-# Получаем токен бота и URL веб-приложения из переменных окружения
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-WEBAPP_URL = os.getenv('WEBAPP_URL')
+def webAppKeyboard(): #создание клавиатуры с webapp кнопкой
+   keyboard = types.ReplyKeyboardMarkup(row_width=1) #создаем клавиатуру
+   webAppTest = types.WebAppInfo("https://alscode.github.io/basic_telegram_app/") #создаем webappinfo - формат хранения url
+#    webAppGame = types.WebAppInfo("https://games.mihailgok.ru") #создаем webappinfo - формат хранения url
+   one_butt = types.KeyboardButton(text="Тестовая страница", web_app=webAppTest) #создаем кнопку типа webapp
+#    two_butt = types.KeyboardButton(text="Игра", web_app=webAppGame) #создаем кнопку типа webapp
+#    keyboard.add(one_butt, two_butt) #добавляем кнопки в клавиатуру
+   keyboard.add(one_butt) #добавляем кнопки в клавиатуру
 
-if not BOT_TOKEN:
-    raise ValueError("Необходимо указать BOT_TOKEN в файле .env")
-if not WEBAPP_URL:
-    raise ValueError("Необходимо указать WEBAPP_URL в файле .env")
+   return keyboard #возвращаем клавиатуру
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик команды /start"""
-    # Создаем кнопку для открытия веб-приложения
-    keyboard = [[InlineKeyboardButton(
-        text="Открыть приложение",
-        web_app=WebAppInfo(url=WEBAPP_URL)
-    )]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    
-    # Отправляем приветственное сообщение с кнопкой
-    await update.message.reply_text(
-        "Привет! Нажмите на кнопку ниже, чтобы открыть приложение:",
-        reply_markup=reply_markup
-    )
+def webAppKeyboardInline(): #создание inline-клавиатуры с webapp кнопкой
+   keyboard = types.InlineKeyboardMarkup(row_width=1) #создаем клавиатуру inline
+   webApp = types.WebAppInfo("https://alscode.github.io/basic_telegram_app/") #создаем webappinfo - формат хранения url
+   one = types.InlineKeyboardButton(text="Веб приложение", web_app=webApp) #создаем кнопку типа webapp
+   keyboard.add(one) #добавляем кнопку в клавиатуру
 
-async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Обработчик данных от веб-приложения"""
-    try:
-        print("Получены данные от веб-приложения")
-        # Получаем данные из веб-приложения
-        data = json.loads(update.effective_message.web_app_data.data)
-        print(f"Полученные данные: {data}")
-        
-        # Отправляем сообщение обратно пользователю
-        if 'message' in data:
-            await update.message.reply_text(f"Вы отправили: {data['message']}")
-    except Exception as e:
-        print(f"Ошибка при обработке данных: {e}")
-        await update.message.reply_text("Произошла ошибка при обработке данных")
+   return keyboard #возвращаем клавиатуру
 
-def main():
-    """Основная функция запуска бота"""
-    # Создаем приложение
-    application = Application.builder().token(BOT_TOKEN).build()
 
-    # Добавляем обработчики
-    application.add_handler(CommandHandler('start', start_command))
-    application.add_handler(MessageHandler(filters.StatusUpdate.WEB_APP_DATA, web_app_data))
+@bot.message_handler(commands=['start']) #обрабатываем команду старт
+def start_fun(message):
+   bot.send_message( message.chat.id, 'Привет, я бот для проверки телеграмм webapps!)\nЗапустить тестовые страницы можно нажав на кнопки.', parse_mode="Markdown", reply_markup=webAppKeyboard()) #отправляем сообщение с нужной клавиатурой
 
-    # Запускаем бота
-    print("Бот запущен...")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+
+@bot.message_handler(content_types="text")
+def new_mes(message):
+   start_fun(message)
+
+
+@bot.message_handler(content_types="web_app_data") #получаем отправленные данные 
+def answer(webAppMes):
+   print(webAppMes) #вся информация о сообщении
+   print(webAppMes.web_app_data.data) #конкретно то что мы передали в бота
+   bot.send_message(webAppMes.chat.id, f"получили инофрмацию из веб-приложения: {webAppMes.web_app_data.data}") 
+   #отправляем сообщение в ответ на отправку данных из веб-приложения 
 
 if __name__ == '__main__':
-    main()
+   bot.infinity_polling()
