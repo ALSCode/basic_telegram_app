@@ -16,9 +16,15 @@ function sendMessage() {
         `;
         
         // Отправляем данные в Telegram
-        tg.sendData(JSON.stringify({
-            message: messageInput.value
-        }));
+        try {
+            tg.sendData(JSON.stringify({
+                message: messageInput.value
+            }));
+            console.log('Данные успешно отправлены');
+        } catch (error) {
+            console.error('Ошибка при отправке данных:', error);
+            resultDiv.innerHTML += '<br><strong>Ошибка при отправке!</strong>';
+        }
         
         // Очищаем поле ввода
         messageInput.value = '';
