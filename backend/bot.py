@@ -34,8 +34,10 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def web_app_data(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обработчик данных от веб-приложения"""
     try:
+        print("Получены данные от веб-приложения")
         # Получаем данные из веб-приложения
         data = json.loads(update.effective_message.web_app_data.data)
+        print(f"Полученные данные: {data}")
         
         # Отправляем сообщение обратно пользователю
         if 'message' in data:
